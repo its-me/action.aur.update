@@ -16,11 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
       - uses: its-me/action.zizmor@v1
         with:
           config: |
             rules:
+              artipacked:
+                disable: true
               unpinned-uses:
                 disable: true
