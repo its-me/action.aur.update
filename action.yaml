@@ -1,0 +1,43 @@
+name: AUR Update
+description: Check upstream for a new release or commit and bump a PKGBUILD accordingly
+author: Sergey Kanafyev
+
+branding:
+  icon: refresh-cw
+  color: blue
+
+inputs:
+  path:
+    description: Directory containing the PKGBUILD to update
+    required: false
+    default: '.'
+  github-token:
+    description: GitHub token for API and git operations
+    required: false
+    default: ${{ github.token }}
+  commit-message:
+    description: Commit message (optional)
+    required: false
+    default: ''
+  git-user-name:
+    description: Git author name used for the update commit
+    required: false
+    default: Sergey Kanafyev
+  git-user-email:
+    description: Git author email used for the update commit
+    required: false
+    default: sergeykanafyev@gmail.com
+
+outputs:
+  updated:
+    description: "'true' if a new version was found and committed, 'false' otherwise"
+
+runs:
+  using: docker
+  image: Dockerfile
+  env:
+    PKG_PATH: ${{ inputs.path }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}
+    COMMIT_MSG: ${{ inputs.commit-message }}
+    GIT_USER_NAME: ${{ inputs.git-user-name }}
+    GIT_USER_EMAIL: ${{ inputs.git-user-email }}
