@@ -23,6 +23,7 @@ Either way, `.SRCINFO` is regenerated, and if anything changed, it's committed a
 - if: steps.update.outputs.updated == 'true'
   uses: its-me/action.aur.publish@v0
   with:
+    path: release
     ssh-key: ${{ secrets.AUR_SSH_KEY }}
 ```
 
