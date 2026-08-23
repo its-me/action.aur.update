@@ -22,11 +22,11 @@ inputs:
   git-user-name:
     description: Git author name used for the update commit
     required: false
-    default: Sergey Kanafyev
+    default: github-actions[bot]
   git-user-email:
     description: Git author email used for the update commit
     required: false
-    default: sergeykanafyev@gmail.com
+    default: github-actions[bot]@users.noreply.github.com
 
 outputs:
   updated:
