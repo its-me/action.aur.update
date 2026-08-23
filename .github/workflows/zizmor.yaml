@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: its-me/action.zizmor@v1
         with:
+          annotations: true
           config: |
             rules:
               artipacked:
