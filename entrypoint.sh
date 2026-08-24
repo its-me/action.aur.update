@@ -14,19 +14,37 @@ if grep -qE '^pkgver\s*\(\s*\)' PKGBUILD; then
   echo "::endgroup::"
 else
   echo "::group::Check for a new release"
-  _src_line=$(grep -m1 '^source=' PKGBUILD)
-  _owner_repo=$(echo "$_src_line" | sed -nE 's#.*github\.com/([^/]+/[^/]+)/archive.*#\1#p')
-  if [ -z "$_owner_repo" ]; then
-    echo "::error::Could not determine a github.com owner/repo from the source= line"
+  _current_pkgver=$(grep '^pkgver=' PKGBUILD | cut -d= -f2)
+
+  # Use the fully-expanded .SRCINFO rather than grepping the raw PKGBUILD,
+  # since source= entries commonly reference other variables (e.g.
+  # ${_pkgname}), span multiple lines, or are arch-specific
+  # (source_x86_64=, ...) -- none of which a literal regex on PKGBUILD text
+  # can resolve.
+  chown -R builder .
+  _srcinfo=$(su builder -c "makepkg --printsrcinfo")
+
+  _src_line=$(printf '%s\n' "$_srcinfo" | grep -E 'github\.com/[^/[:space:]]+/[^/[:space:]]+/(archive|releases/download)/' | grep -F "$_current_pkgver" | head -n1)
+  if [ -z "$_src_line" ]; then
+    echo "::error::Could not find a github.com source entry referencing the current pkgver"
     exit 1
   fi
 
-  _prefix=$(echo "$_src_line" | sed -nE 's#.*/([^/]*)\$\{pkgver\}.*#\1#p')
-  _current_pkgver=$(grep '^pkgver=' PKGBUILD | cut -d= -f2)
+  _owner_repo=$(echo "$_src_line" | sed -nE 's#.*github\.com/([^/]+/[^/]+)/(archive|releases/download)/.*#\1#p')
 
-  _latest_tag=$(gh api "repos/${_owner_repo}/releases/latest" --jq '.tag_name')
+  if echo "$_src_line" | grep -q '/releases/download/'; then
+    _tag_segment=$(echo "$_src_line" | sed -nE 's#.*/releases/download/([^/]+)/.*#\1#p')
+  else
+    _tag_segment=$(echo "$_src_line" | sed -nE 's#.*/archive/(refs/tags/)?([^/]+)\.(tar\.gz|tar\.xz|tar\.bz2|tar\.zst|tgz|tbz2|zip).*#\2#p')
+  fi
+  _prefix=$(echo "$_tag_segment" | sed -nE "s#^(.*)${_current_pkgver}\$#\1#p")
+
+  if ! _latest_tag=$(gh api "repos/${_owner_repo}/releases/latest" --jq '.tag_name' 2>/dev/null); then
+    # Some upstreams only publish git tags, never GitHub Releases.
+    _latest_tag=$(gh api "repos/${_owner_repo}/tags" --jq '.[0].name' 2>/dev/null) || _latest_tag=""
+  fi
   if [ -z "$_latest_tag" ]; then
-    echo "::error::Could not determine the latest release for ${_owner_repo}"
+    echo "::error::Could not determine the latest release or tag for ${_owner_repo}"
     exit 1
   fi
 
