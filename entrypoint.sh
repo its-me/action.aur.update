@@ -64,12 +64,7 @@ else
   echo "::endgroup::"
 fi
 
-echo "::group::Regenerate .SRCINFO"
-chown -R builder .
-su builder -c "makepkg --printsrcinfo" > .SRCINFO
-echo "::endgroup::"
-
-if git diff --quiet -- PKGBUILD .SRCINFO; then
+if git diff --quiet -- PKGBUILD; then
   echo "No changes to commit"
   echo "updated=false" >> "$GITHUB_OUTPUT"
   exit 0
@@ -78,7 +73,7 @@ fi
 echo "::group::Commit and push"
 _ver=$(grep '^pkgver=' PKGBUILD | cut -d= -f2)
 _rel=$(grep '^pkgrel=' PKGBUILD | cut -d= -f2)
-git add PKGBUILD .SRCINFO
+git add PKGBUILD
 git commit -m "${COMMIT_MSG:-update to ${_ver}-${_rel}}"
 git push
 echo "::endgroup::"
