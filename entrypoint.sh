@@ -73,9 +73,14 @@ fi
 echo "::group::Commit and push"
 _ver=$(grep '^pkgver=' PKGBUILD | cut -d= -f2)
 _rel=$(grep '^pkgrel=' PKGBUILD | cut -d= -f2)
+_msg="${COMMIT_MSG:-update to ${_ver}-${_rel}}"
 git add PKGBUILD
-git commit -m "${COMMIT_MSG:-update to ${_ver}-${_rel}}"
+git commit -m "$_msg"
 git push
+echo "::endgroup::"
+
+echo "::group::Create release"
+gh release create "${_ver}-${_rel}" --title "${_ver}-${_rel}" --notes "$_msg"
 echo "::endgroup::"
 
 echo "updated=true" >> "$GITHUB_OUTPUT"
