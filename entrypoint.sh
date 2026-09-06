@@ -39,7 +39,9 @@ else
   fi
   _prefix=$(echo "$_tag_segment" | sed -nE "s#^(.*)${_current_pkgver}\$#\1#p")
 
-  if ! _latest_tag=$(gh api "repos/${_owner_repo}/releases/latest" --jq '.tag_name' 2>/dev/null); then
+  if [ -n "${TARGET_TAG:-}" ]; then
+    _latest_tag="$TARGET_TAG"
+  elif ! _latest_tag=$(gh api "repos/${_owner_repo}/releases/latest" --jq '.tag_name' 2>/dev/null); then
     # Some upstreams only publish git tags, never GitHub Releases.
     _latest_tag=$(gh api "repos/${_owner_repo}/tags" --jq '.[0].name' 2>/dev/null) || _latest_tag=""
   fi

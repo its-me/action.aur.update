@@ -19,6 +19,14 @@ inputs:
     description: Commit message (optional)
     required: false
     default: ''
+  target-tag:
+    description: >-
+      Explicit upstream tag to update to, bypassing the latest-release/tag
+      lookup. Useful when the caller has its own logic for picking the
+      target (e.g. filtering releases by a criterion not expressible as
+      "latest").
+    required: false
+    default: ''
   git-user-name:
     description: Git author name used for the update commit
     required: false
@@ -39,5 +47,6 @@ runs:
     PKG_PATH: ${{ inputs.path }}
     GITHUB_TOKEN: ${{ inputs.github-token }}
     COMMIT_MSG: ${{ inputs.commit-message }}
+    TARGET_TAG: ${{ inputs.target-tag }}
     GIT_USER_NAME: ${{ inputs.git-user-name }}
     GIT_USER_EMAIL: ${{ inputs.git-user-email }}
