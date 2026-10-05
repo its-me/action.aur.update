@@ -77,6 +77,8 @@ _ver=$(grep '^pkgver=' PKGBUILD | cut -d= -f2)
 _rel=$(grep '^pkgrel=' PKGBUILD | cut -d= -f2)
 git add PKGBUILD
 git commit -m "${COMMIT_MSG:-update to ${_ver}-${_rel}}"
+# the checkout is pinned to the triggering SHA, which another workflow may have moved past
+git pull --rebase
 git push
 echo "::endgroup::"
 
