@@ -50,7 +50,12 @@ else
     exit 1
   fi
 
-  _new_pkgver="${_latest_tag#"$_prefix"}"
+  # upstreams sometimes change tag style between releases (v3.2 -> v.3.3)
+  _new_pkgver=$(echo "${_latest_tag#"$_prefix"}" | sed -E 's/^[^0-9]+//')
+  if ! [[ "$_new_pkgver" =~ ^[0-9][0-9A-Za-z._+]*$ ]]; then
+    echo "::error::Cannot derive a valid pkgver from tag '${_latest_tag}' (got '${_new_pkgver}')"
+    exit 1
+  fi
 
   if [ "$_new_pkgver" = "$_current_pkgver" ]; then
     echo "Already up to date (${_current_pkgver})"
@@ -61,6 +66,8 @@ else
 
   echo "New release: ${_current_pkgver} -> ${_new_pkgver}"
   sed -i "s/^pkgver=.*/pkgver=${_new_pkgver}/" PKGBUILD
+  # PKGBUILDs whose upstream tag isn't just prefix+pkgver keep the literal tag in _tag
+  sed -i "s/^_tag=.*/_tag=${_latest_tag}/" PKGBUILD
   chown -R builder .
   su builder -c "updpkgsums PKGBUILD"
   echo "::endgroup::"
